@@ -14,7 +14,13 @@ class Node:
 def calculate_heuristic(node, goal_state):
     return abs(int(node.state[1:]) - int(goal_state[1:]))
 
-def a_star(start_state, goal_state, connections, distances):
+def calculate_time(distance_km, speed_kmph, change_line=False):
+    time_hours = distance_km / speed_kmph
+    if change_line:
+        time_hours += 3 / 60  
+    return time_hours
+
+def a_star(start_state, goal_state, connections, distances, lines):
     open_list = []
     closed_set = set()
     log = []
@@ -30,11 +36,12 @@ def a_star(start_state, goal_state, connections, distances):
         if current_node.state == goal_state:
             path = []
             total_distance = current_node.cost
+            total_time = current_node.cost / 40  
             while current_node.parent:
                 path.append(current_node.state)
                 current_node = current_node.parent
             path.append(start_state)
-            return path[::-1], total_distance, log
+            return path[::-1], total_distance, total_time, log
 
         closed_set.add(current_node.state)
 
@@ -42,10 +49,23 @@ def a_star(start_state, goal_state, connections, distances):
             if neighbor not in closed_set:
                 neighbor_node = Node(neighbor, current_node, cost=current_node.cost + distance)
                 neighbor_node.heuristic = calculate_heuristic(neighbor_node, goal_state)
+
+                
+                current_line = None
+                neighbor_line = None
+                for line, stations in lines.items():
+                    if current_node.state in stations:
+                        current_line = line
+                    if neighbor in stations:
+                        neighbor_line = line
+
+                change_line = current_line != neighbor_line
+                neighbor_node.cost += calculate_time(distance, 40, change_line) 
+
                 heapq.heappush(open_list, neighbor_node)
                 log.append((neighbor_node.state, neighbor_node.cost))
 
-    return None, -1, log
+    return None, -1, -1, log
 
 connections = {
     "E1": ["E2"],
@@ -81,20 +101,29 @@ distances = {
     "E14": [6.2]
 }
 
+lines = {
+    "Linha Vermelha": ["E1", "E2", "E3", "E4", "E14"],
+    "Linha Verde": ["E7", "E2", "E9", "E10", "E13"],
+    "Linha Azul": ["E6", "E7", "E3", "E8", "E10", "E12"],
+    "Linha Amarela": ["E11", "E9", "E8", "E4", "E5"]
+}
+
 start_station = input("Digite a estação de partida (E1, E2, ..., E14): ")
 goal_station = input("Digite a estação de destino (E1, E2, ..., E14): ")
 
 if start_station not in connections or goal_station not in connections:
     print("Estações inválidas. Certifique-se de digitar valores válidos.")
 else:
-    path, total_distance, log = a_star(start_station, goal_station, connections, distances)
+    path, total_distance, total_time, log = a_star(start_station, goal_station, connections, distances, lines)
 
-    if path and total_distance != -1:
+    if path and total_distance != -1 and total_time != -1:
         print("Caminho percorrido entre os nós:", path)
-        print("Tempo em horas para percorrer essa rota:", "{:.2f}".format(total_distance / 60))
+        print("Tempo total de viagem (em horas):", "{:.2f}".format(round(total_time, 2)))
         print("Custo de cada nó do caminho percorrido:")
         for node, cost in log:
-            print(f"{node} ({cost})")
-        print("Valor total percorrido em km:", total_distance)
+            print(f"{node} ({round(cost, 2)})")
+        print("Valor total percorrido em km:", round(total_distance, 2))
     else:
         print("Não foi possível encontrar um caminho.")
+
+#Adicionei algumas coisinhas, acho que dá para organizar melhor o print para ficar visualmente mais fácil de se visualizar os resultados.
