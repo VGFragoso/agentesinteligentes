@@ -1,6 +1,8 @@
 import heapq
 from math import sqrt
 
+from diagrama import create_mermaid_diagram, mermaid
+
 estacao_conexao = { 
     "E1": ["E2"],
     "E2": ["E1", "E3", "E7", "E9"],
@@ -141,7 +143,7 @@ def astar(inicio, destino):
 
         tempo += distancia_real[current_station][estacao_conexao[current_station].index(next_station)] / velocidade
 
-    return path, cost_so_far[destino], tempo, stations_visited, line_changes
+    return path, cost_so_far[destino], tempo, stations_visited, line_changes, came_from, cost_so_far
 
 def main():
     inicio = input("Digite a estação inicial: ")
@@ -151,7 +153,7 @@ def main():
         print("Estação inicial ou de destino não encontrada.")
         return
 
-    rota, distance, time, stations_visited, _ = astar(inicio, destino)  # Ignorar o número de mudanças de linha aqui
+    rota, distance, time, stations_visited, _, came_from, cost_so_far = astar(inicio, destino)  # Ignorar o número de mudanças de linha aqui
     print("Melhor rota:")
     for i, estacao in enumerate(rota):
         if i == len(rota) - 1:
@@ -184,6 +186,18 @@ def main():
     print("Tempo do percurso:", round(tempo, 2), "horas")
     print("Estações visitadas:", stations_visited)
     print("Mudanças de linha:", line_changes)
+
+    # Imprime o diagrama gerado
+    mermaid_diagram = create_mermaid_diagram(
+        # graph=distancia_real,
+        distancia_real=distancia_real,
+        estacao_conexao=estacao_conexao,
+
+        path=rota,
+        relationships=came_from,
+        arrow_texts=cost_so_far,
+    )
+    print("\nDiagrama de árvore de busca (link externo):\n", mermaid(mermaid_diagram))
 
 def get_station_line(station):
     """
