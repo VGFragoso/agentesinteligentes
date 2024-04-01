@@ -109,6 +109,8 @@ def astar(inicio, destino):
                 heapq.heappush(fronteira, (priority, next_station))
                 came_from[next_station] = current
                 stations_visited.append(next_station)  # Registrar estação visitada
+                
+        print(f"Iteração atual: \'{current}\'. Fronteira atual: \n\t{fronteira}\n")  # Imprime a fronteira a cada iteração
 
     # Reconstruir o caminho
     path = []
