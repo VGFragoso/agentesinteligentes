@@ -20,8 +20,8 @@ estacao_conexao = {
 
 linhas = {
     "Linha Vermelha": ["E1", "E2", "E3", "E4", "E14"], 
-    "Linha Verde": ["E2", "E7", "E9", "E10", "E13"],
     "Linha Azul": ["E6", "E7", "E3", "E8", "E10", "E12"],
+    "Linha Verde": ["E2", "E7", "E9", "E10", "E13"],
     "Linha Amarela": ["E11", "E9", "E8", "E4", "E5"]
 }
 
@@ -75,7 +75,7 @@ def heuristica(estacao1, estacao2):
     return distancia_euclidiana(estacao1, estacao2) / velocidade
 
 def astar(inicio, destino, log_file):
-    ## (f(n), estação)
+    ## (f(n), estação, G)
     fronteira = []
     heapq.heappush(fronteira, (0, inicio, 0))  
     move_de = {}
@@ -103,7 +103,10 @@ def astar(inicio, destino, log_file):
                 estacao_visita.append(prox_estacao)  
 
                 linha_prox_estacao = get_station_line(prox_estacao)
-                log_file.write(f"Fronteira: {[prox_estacao + ' (' + linha_prox_estacao + ')' if prox_estacao == m else m for (_, m, _) in fronteira]} - Nós: {[prox_estacao + ' (' + get_station_line(prox_estacao) + ')' if prox_estacao == m else m for (_, m, _) in fronteira]} - G: {[g for (_, _, g) in fronteira]}\n")
+                log_file.write(f"Fronteira: {[(prox_estacao + ' (' + linha_prox_estacao + ')') if prox_estacao == m else m for (_, m, _) in fronteira]}\n")
+                log_file.write(f"Nós: {[prox_estacao + ' (' + get_station_line(prox_estacao) + ')' if prox_estacao == m else m for (_, m, _) in fronteira]}\n")
+                log_file.write(f"G: {[g for (_, _, g) in fronteira]}\n")
+                log_file.write("\n")
                 h_atual = h_novo  # Atualiza H(n) para o próximo nó
 
     rota = []
@@ -143,10 +146,22 @@ def main():
     linhas_disponiveis = ', '.join(linhas.keys())
 
     linha_inicio = input(f"Digite a linha da estação inicial ({linhas_disponiveis}): ")
+    if linha_inicio not in linhas:
+        print("Linha inicial inválida. As linhas disponíveis são:", linhas_disponiveis)
+        return
     estacao_inicio = input(f"Digite o número da estação inicial ({', '.join(linhas[linha_inicio])}): ")
+    if estacao_inicio not in linhas[linha_inicio]:
+        print("Estação inicial inválida para a linha selecionada.")
+        return
 
     linha_destino = input(f"Digite a linha da estação de destino ({linhas_disponiveis}): ")
+    if linha_destino not in linhas:
+        print("Linha de destino inválida. As linhas disponíveis são:", linhas_disponiveis)
+        return
     estacao_destino = input(f"Digite o número da estação de destino ({', '.join(linhas[linha_destino])}): ")
+    if estacao_destino not in linhas[linha_destino]:
+        print("Estação de destino inválida para a linha selecionada.")
+        return
 
     inicio = estacao_inicio
     destino = estacao_destino
