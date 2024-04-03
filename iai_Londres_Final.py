@@ -86,14 +86,14 @@ def astar(inicio, destino, log_file):
     mud_linha = 0  
     h_atual = heuristica(distancia_direta[inicio], distancia_direta[destino])
 
-    log_file.write(f"Nó Raiz: {inicio} (G: {custo_momento[inicio]}, H: {h_atual})\n")
+    log_file.write(f"Nó Raiz: {inicio} (G: {custo_momento[inicio]})\n")
     log_file.write("\n")
 
     while fronteira:
         _, m_atual, g_atual = heapq.heappop(fronteira)
 
         if m_atual == destino:
-            log_file.write(f"Nó Final (Destino): {m_atual} (G: {g_atual}, H: 0)\n")
+            log_file.write(f"Nó Final (Destino): {m_atual} (G: {g_atual})\n")
             log_file.write("\n")
             break
 
@@ -101,14 +101,13 @@ def astar(inicio, destino, log_file):
             novo_custo = custo_momento[m_atual] + distancia_real[m_atual][estacao_conexao[m_atual].index(prox_estacao)]
             if prox_estacao not in custo_momento or novo_custo < custo_momento[prox_estacao]:
                 custo_momento[prox_estacao] = novo_custo
-                h_novo = heuristica(distancia_direta[prox_estacao], distancia_direta[destino])
-                prioridade = novo_custo + h_novo
+                prioridade = novo_custo + heuristica(distancia_direta[prox_estacao], distancia_direta[destino])
                 heapq.heappush(fronteira, (prioridade, prox_estacao, novo_custo))
                 move_de[prox_estacao] = m_atual
                 estacao_visita.append(prox_estacao)  
 
                 linha_prox_estacao = get_station_line(prox_estacao)
-                log_file.write(f"Nó visitado: {prox_estacao} (Linha: {linha_prox_estacao}, G: {novo_custo}, H: {h_novo}, F: {prioridade})\n")
+                log_file.write(f"Nó visitado: {prox_estacao} (Linha: {linha_prox_estacao}, G: {novo_custo})\n")
                 log_file.write(f"Partindo de: {m_atual}\n")
                 log_file.write("\n")
 
