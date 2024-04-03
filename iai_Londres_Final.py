@@ -19,8 +19,8 @@ estacao_conexao = {
 }
 
 linhas = {
-    "Linha Vermelha": ["E1", "E2", "E3", "E4", "E14"], 
     "Linha Azul": ["E6", "E7", "E3", "E8", "E10", "E12"],
+    "Linha Vermelha": ["E1", "E2", "E3", "E4", "E14"], 
     "Linha Verde": ["E2", "E7", "E9", "E10", "E13"],
     "Linha Amarela": ["E11", "E9", "E8", "E4", "E5"]
 }
@@ -86,10 +86,15 @@ def astar(inicio, destino, log_file):
     mud_linha = 0  
     h_atual = heuristica(distancia_direta[inicio], distancia_direta[destino])
 
+    log_file.write(f"Nó Raiz: {inicio} (G: {custo_momento[inicio]}, H: {h_atual})\n")
+    log_file.write("\n")
+
     while fronteira:
         _, m_atual, g_atual = heapq.heappop(fronteira)
 
         if m_atual == destino:
+            log_file.write(f"Nó Final (Destino): {m_atual} (G: {g_atual}, H: 0)\n")
+            log_file.write("\n")
             break
 
         for prox_estacao in estacao_conexao[m_atual]:
@@ -103,11 +108,9 @@ def astar(inicio, destino, log_file):
                 estacao_visita.append(prox_estacao)  
 
                 linha_prox_estacao = get_station_line(prox_estacao)
-                log_file.write(f"Fronteira: {[(prox_estacao + ' (' + linha_prox_estacao + ')') if prox_estacao == m else m for (_, m, _) in fronteira]}\n")
-                log_file.write(f"Nós: {[prox_estacao + ' (' + get_station_line(prox_estacao) + ')' if prox_estacao == m else m for (_, m, _) in fronteira]}\n")
-                log_file.write(f"G: {[g for (_, _, g) in fronteira]}\n")
+                log_file.write(f"Nó visitado: {prox_estacao} (Linha: {linha_prox_estacao}, G: {novo_custo}, H: {h_novo}, F: {prioridade})\n")
+                log_file.write(f"Partindo de: {m_atual}\n")
                 log_file.write("\n")
-                h_atual = h_novo  # Atualiza H(n) para o próximo nó
 
     rota = []
     m_atual = destino
@@ -143,65 +146,71 @@ def astar(inicio, destino, log_file):
     return rota, custo_momento[destino], tempo, estacao_visita, mud_linha
 
 def main():
-    linhas_disponiveis = ', '.join(linhas.keys())
+    while True:
+        linhas_disponiveis = ', '.join(linhas.keys())
 
-    linha_inicio = input(f"Digite a linha da estação inicial ({linhas_disponiveis}): ")
-    if linha_inicio not in linhas:
-        print("Linha inicial inválida. As linhas disponíveis são:", linhas_disponiveis)
-        return
-    estacao_inicio = input(f"Digite o número da estação inicial ({', '.join(linhas[linha_inicio])}): ")
-    if estacao_inicio not in linhas[linha_inicio]:
-        print("Estação inicial inválida para a linha selecionada.")
-        return
+        linha_inicio = input(f"Digite a linha da estação inicial ({linhas_disponiveis}): ")
+        if linha_inicio not in linhas:
+            print("Linha inicial inválida. As linhas disponíveis são:", linhas_disponiveis)
+            continue
+        estacao_inicio = input(f"Digite o número da estação inicial ({', '.join(linhas[linha_inicio])}): ")
+        if estacao_inicio not in linhas[linha_inicio]:
+            print("Estação inicial inválida para a linha selecionada.")
+            continue
 
-    linha_destino = input(f"Digite a linha da estação de destino ({linhas_disponiveis}): ")
-    if linha_destino not in linhas:
-        print("Linha de destino inválida. As linhas disponíveis são:", linhas_disponiveis)
-        return
-    estacao_destino = input(f"Digite o número da estação de destino ({', '.join(linhas[linha_destino])}): ")
-    if estacao_destino not in linhas[linha_destino]:
-        print("Estação de destino inválida para a linha selecionada.")
-        return
+        linha_destino = input(f"Digite a linha da estação de destino ({linhas_disponiveis}): ")
+        if linha_destino not in linhas:
+            print("Linha de destino inválida. As linhas disponíveis são:", linhas_disponiveis)
+            continue
+        estacao_destino = input(f"Digite o número da estação de destino ({', '.join(linhas[linha_destino])}): ")
+        if estacao_destino not in linhas[linha_destino]:
+            print("Estação de destino inválida para a linha selecionada.")
+            continue
 
-    inicio = estacao_inicio
-    destino = estacao_destino
+        inicio = estacao_inicio
+        destino = estacao_destino
 
-    if inicio not in estacao_conexao or destino not in estacao_conexao:
-        print("Estação inicial ou de destino não encontrada.")
-        return
-    
-    with open('log.txt', 'w') as log_file:
-        rota, distance, tempo, no_visitado, _ = astar(inicio, destino, log_file)  
-        print("Melhor rota:")
-        for i, estacao in enumerate(rota):
-            if i == len(rota) - 1:
-                print(estacao, f"({get_station_line(estacao)})")
-            else:
-                print(estacao, f"({get_station_line(estacao)})", "->", end=" ")
-        print("Distância percorrida:", round(distance, 1), "km")
+        if inicio not in estacao_conexao or destino not in estacao_conexao:
+            print("Estação inicial ou de destino não encontrada.")
+            continue
         
-        m_linha = 0
-        at_linha = None
-        tempo_min = 0
+        with open('log.txt', 'w') as log_file:
+            rota, distance, tempo, no_visitado, _ = astar(inicio, destino, log_file)  
+            print("Melhor rota:")
+            for i, estacao in enumerate(rota):
+                if i == len(rota) - 1:
+                    print(estacao, f"({get_station_line(estacao)})")
+                else:
+                    print(estacao, f"({get_station_line(estacao)})", "->", end=" ")
+            print("Distância percorrida:", round(distance, 1), "km")
+            
+            m_linha = 0
+            at_linha = None
+            tempo_min = 0
 
-        for i in range(len(rota) - 1):
-            estacao_at = rota[i]
-            prox_estacao = rota[i + 1]
+            if get_station_line(inicio) != get_station_line(destino):  # Verifica se a linha inicial é diferente da linha final
+                for i in range(len(rota) - 1):
+                    estacao_at = rota[i]
+                    prox_estacao = rota[i + 1]
 
-            if at_linha is None:  
-                at_linha = get_station_line(estacao_at)
-            prox_linha = get_station_line(prox_estacao)
+                    if at_linha is None:  
+                        at_linha = get_station_line(estacao_at)
+                    prox_linha = get_station_line(prox_estacao)
 
-            if at_linha != prox_linha:  
-                m_linha += 1
-                tempo_min += baldeacao_temp * 60  # Convertendo para minutos
-                at_linha = prox_linha  
+                    if at_linha != prox_linha:  
+                        m_linha += 1
+                        tempo_min += baldeacao_temp * 60  # Convertendo para minutos
+                        at_linha = prox_linha  
 
-            tempo_min += distancia_real[estacao_at][estacao_conexao[estacao_at].index(prox_estacao)] / velocidade * 60  # Convertendo para minutos
+                    tempo_min += distancia_real[estacao_at][estacao_conexao[estacao_at].index(prox_estacao)] / velocidade * 60  # Convertendo para minutos
 
-        print("Tempo do percurso:", round(tempo_min, 2), "minutos")
-        print("Nós Percorridos:", no_visitado)
-        print("Mudanças de linha:", m_linha)
+            print("Tempo do percurso:", round(tempo_min, 2), "minutos")
+            print("Nós Percorridos:", no_visitado)
+            print("Mudanças de linha:", m_linha)
+
+        continuar = input("Deseja fazer outra consulta? (Digite 'sim' para continuar ou qualquer outra coisa para sair): ")
+        if continuar.lower() != 'sim':
+            break
 
 def get_station_line(station):
     """
